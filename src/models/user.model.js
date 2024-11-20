@@ -7,15 +7,18 @@ const userSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
-    index: true
   },
   email: {
     type: String,
     required: true,
     trim: true,
     unique: true,
-    index: true,
     lowerCase: true
+  },
+  image: {
+    type: String,
+    required: true,
+    default: ''
   },
   password: {
     type: String,
@@ -37,7 +40,8 @@ const userSchema = new mongoose.Schema({
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Cart'
     }
-  ]
+  ],
+  status: ['pending','approved','cancled']
 }, { timestamps: true })
 
 
