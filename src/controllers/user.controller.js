@@ -4,7 +4,6 @@ import { ApiError } from "../utils/ApiError.js"
 import { User } from "../models/user.model.js"
 import { ApiResponse } from "../utlis/ApiResponse.js"
 import { asyncHandler } from "../utlis/asyncHandler.js"
-import { response } from "express"
 
 
 const generateAccessAndRefreshTokens = async (userId) => {
@@ -47,8 +46,6 @@ const registerUser = asyncHandler(async (req, res) => {
       status: 'pending',
       role: 'buyer'
     })
-
-    await user.save()
 
     const createdUser = await User.findById(user._id).select(
       "-password -refreshToken"

@@ -41,7 +41,8 @@ const userSchema = new mongoose.Schema({
       ref: 'Cart'
     }
   ],
-  status: ['pending','approved','cancled']
+  status: ['pending','approved','cancled'],
+  refreshToken: {type : String},
 }, { timestamps: true })
 
 
@@ -64,6 +65,11 @@ userSchema.methods.generateAccessToken = function() {
       expiresIn : process.env.ACCESS_TOKEN_EXPIRY
     }
   )
+}
+
+userSchema.methods.isPasswordCorrect = async function 
+(password){
+    return await bcrypt.compare(password,this.password)
 }
 
 userSchema.methods.generateRefreshToken = function(){
