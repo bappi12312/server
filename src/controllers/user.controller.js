@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken"
-import mongoose from "mongoose"
+import mongoose, { isValidObjectId } from "mongoose"
 import { ApiError } from "../utils/ApiError.js"
 import { User } from "../models/user.model.js"
 import { ApiResponse } from "../utlis/ApiResponse.js"
@@ -184,10 +184,10 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 })
 
 // get users by admin
-const getUsers = asyncHandler(async(req,res) => {
+const getUsers = asyncHandler(async (req, res) => {
   try {
     const users = await User.find({})
-    if(!(users || Array.isArray(users) || users.lenght > 0)) {
+    if (!(users || Array.isArray(users) || users.lenght > 0)) {
       throw new ApiError(202, "Users not found")
     }
 
@@ -196,6 +196,65 @@ const getUsers = asyncHandler(async(req,res) => {
     res.status(500).json({
       message: 'error while fetching users'
     });
+  }
+})
+
+// change User role by admin
+const changeUserRole = asyncHandler(async (req, res) => {
+  const { userId, role } = req.body;
+
+  if (!isValidObjectId(userId)) throw new ApiError(400, "invalid userid")
+
+  const validRoles = ["admin", "seller", "buyer"]; // Example roles
+  if (!validRoles.includes(role)) {
+    throw new ApiError(400, `Invalid role. Valid roles are: ${validRoles.join(", ")}`);
+  }
+
+  try {
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      {
+        $set: {
+          role
+        }
+      },
+      { new: true, runValidators: true }
+    )
+
+    if (!updatedUser) {
+      throw new ApiError(404, "User not found");
+    }
+
+    res.status(200).json({
+      status: 200,
+      message: "User role updated successfully",
+      data: updatedUser,
+    });
+  } catch (error) {
+    throw new ApiError(500, error.message)
+  }
+})
+
+// delete user by admin
+const deleteUser = asyncHandler(async (req, res) => {
+  const { userId } = req.body;
+
+  if (!userId || !isValidObjectId(userId)) {
+    throw new ApiError(400, "invalid userid")
+  }
+
+  try {
+    await User.findByIdAndDelete(
+      userId,
+      {
+        isDeleted: true
+      }
+    )
+    return res.status(200).json(
+      new ApiResponse(200, "user delte successfully")
+    )
+  } catch (error) {
+    throw new ApiError(400, "error deleting a user")
   }
 })
 
@@ -234,5 +293,8 @@ export {
   logoutUser,
   refreshAccessToken,
   updateAccountDetails,
-  getCurrentUser
+  getCurrentUser,
+  getUsers,
+  changeUserRole,
+  deleteUser
 }
