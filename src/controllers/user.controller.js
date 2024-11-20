@@ -183,6 +183,22 @@ const getCurrentUser = asyncHandler(async (req, res) => {
     .json(200, req.user, "Current user fetched successfully")
 })
 
+// get users by admin
+const getUsers = asyncHandler(async(req,res) => {
+  try {
+    const users = await User.find({})
+    if(!(users || Array.isArray(users) || users.lenght > 0)) {
+      throw new ApiError(202, "Users not found")
+    }
+
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({
+      message: 'error while fetching users'
+    });
+  }
+})
+
 
 const updateAccountDetails = asyncHandler(async (req, res) => {
   const { name, email } = req.body
@@ -217,5 +233,6 @@ export {
   loginUser,
   logoutUser,
   refreshAccessToken,
-  updateAccountDetails
+  updateAccountDetails,
+  getCurrentUser
 }
