@@ -45,35 +45,90 @@ const addproduct = asyncHandler(async (req, res) => {
 
     })
 
-    if(!product) {
-      throw new ApiError(400,"product not found")
+    if (!product) {
+      throw new ApiError(400, "product not found")
     }
 
     return res.status(201).json(
       new ApiResponse(200, product, "product added successfully")
-  )
+    )
   } catch (error) {
     res.status(400).send(error.message);
   }
-}) 
+})
 
-const getProductById = asyncHandler(async(req,res) => {
+const getProductById = asyncHandler(async (req, res) => {
   try {
     const product = await Product.findById(req.params.id)
-    if(!product) {
-      throw new ApiError(400,"product not found")
+    if (!product) {
+      throw new ApiError(400, "product not found")
     }
 
     return res.status(200).json(
-      new ApiResponse(200,product,"product find succsfully")
+      new ApiResponse(200, product, "product find succsfully")
     )
   } catch (error) {
-    
+
+  }
+})
+
+const getAllProduts = asyncHandler(async (req, res) => {
+  const { category, brand, search = '', order = 'desc', sortBy = 'price', size = 10, page = 1 } = req.query;
+
+  try {
+    const limit = parseInt(size)
+    const skip = (parseInt(page) - 1) * limit;
+    const sortOrder = order === 'asc' ? 1 : -1;
+
+    const filters = {}
+    if (search) {
+      filters.$or = [
+        { category: { $regex: search, $options: 'i' } },
+        { brand: { $regex: search, $options: 'i' } }
+      ]
+    }
+
+    const pipeline = [
+      {
+        $match: search ? filters : {},
+      },
+      {
+        $sort: {
+          [sortBy]: sortOrder
+        }
+      },
+      { $skip: skip },
+      { $limit: limit },
+    ]
+
+    const result = await Product.aggregate(pipeline)
+    const total = await Product.countDocuments()
+
+    if (!result?.length) {
+      throw new ApiError(404, "result not fount")
+    }
+
+    return res
+    .status(200)
+    .json(
+        {
+          total,
+          currentPage: parseInt(page),
+          totalPages: Math.ceil(total / limit),
+          sort: {field: sortBy, order},
+          filters: search,
+          data: result[0]
+        }
+    )
+  } catch (error) {
+    res.status(500).json({ message: 'error while fetching all products', error });
   }
 })
 
 
+
 export {
   addproduct,
-  getProductById
+  getProductById,
+  getAllProduts
 }
