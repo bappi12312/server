@@ -18,19 +18,29 @@ const getCart = asyncHandler(async (req, res) => {
       new ApiResponse(200, cart, "get products cart")
     )
   } catch (error) {
-
+    console.error('Error fetching cart:', error);
+    res.status(500).json({ message: 'Internal server error' });
   }
 })
 
 // add to cart controller by a seller
 const addToCart = asyncHandler(async (req, res) => {
-  const { porductId, quantity } = req.body;
+  const { porductId, quantity = 1 } = req.body;
 
   if (!isValidObjectId(porductId)) {
     throw new ApiError(400, "invalid productID")
   }
 
+
+
   try {
+
+
+    const product = await Product.findById(porductId);
+    if (!product) {
+      return res.status(404).json({ success: false, message: 'Product not found' });
+    }
+
     let cart = await Cart.findOne({
       user: req.user?._id
     })
@@ -47,13 +57,20 @@ const addToCart = asyncHandler(async (req, res) => {
     if (itemIndex > -1) {
       cart.items[itemIndex].quantity += quantity;
     } else {
-      cart.items.push({ product: porductId, quantity: 1 })
+      cart.items.push({ product: porductId, quantity: 1, price: product.price })
     }
+
+    // calculate total price
+
+    cart.totalPrice = cart.items.reduce(
+      (sum, item) => sum + item.quantity * item.price,
+      0
+    )
 
     await cart.save()
 
     return res.status(200).json(
-      new ApiResponse(200, cart?.items, "product added to cart successfully")
+      new ApiResponse(200, cart, "product added to cart successfully")
     )
   } catch (error) {
     throw new ApiError(500, error?.message)
@@ -77,10 +94,15 @@ const removeProduct = asyncHandler(async (req, res) => {
     }
 
     cart.items.splice(itemIndex, 1)
+
+    cart.totalPrice = cart.items.reduce(
+      (sum, item) => sum + item.quantity * item.price,
+      0
+    )
     await cart.save()
 
     return res.status(200).json(
-      new ApiResponse(200, cart?.items, "product remove from cart successfully")
+      new ApiResponse(200, cart, "product remove from cart successfully")
     )
   } catch (error) {
     console.error('Error removing from cart:', error);
