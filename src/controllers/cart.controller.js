@@ -73,7 +73,7 @@ const addToCart = asyncHandler(async (req, res) => {
 })
 
 // remove product from cart
-const removeProduct = asyncHandler(async (req, res) => {
+const removeProductFromCart = asyncHandler(async (req, res) => {
   const { porductId } = req.body;
 
   try {
@@ -108,5 +108,5 @@ const removeProduct = asyncHandler(async (req, res) => {
 export {
   getCart,
   addToCart,
-  removeProduct
+  removeProductFromCart
 }
