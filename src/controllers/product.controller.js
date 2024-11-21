@@ -58,6 +58,44 @@ const addproduct = asyncHandler(async (req, res) => {
   }
 })
 
+const deleteProductBySeller = asyncHandler(async (req, res) => {
+  const { productId } = req.params || req.body;
+
+  if (!productId || !isValidObjectId(productId)) {
+    throw new ApiError(404, "productId is required")
+  }
+
+  try {
+    // find product
+    const product = await Product.findOne({
+      _id: productId,
+      seller: req.user?._id
+    })
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: 'Product not found or you do not have permission to delete it',
+      });
+    }
+
+    // delete the product
+    await product.remove();
+
+
+    res.status(200).json({
+      success: true,
+      message: 'Product deleted successfully',
+    });
+  } catch (error) {
+    console.error('Error deleting product:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+    });
+  }
+})
+
 const getProductById = asyncHandler(async (req, res) => {
   try {
     const product = await Product.findById(req.params.id)

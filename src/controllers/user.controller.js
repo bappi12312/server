@@ -326,22 +326,22 @@ const removeWishlist = asyncHandler(async (req, res) => {
       success: true,
       message: 'Product removed from wishlist successfully',
       wishlist: user.wishList, // Return updated wishlist
-  });
+    });
   } catch (error) {
-
+    console.error('Error removing wishlist item:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
   }
 })
 
 // get wishlist
-const getWishlist = async (req, res) => {
+const getWishlist = asyncHandler(async (req, res) => {
   try {
     const user = await User.findById(req.user?._id).populate('wishlist');
     res.json(user.wishlist);
   } catch (error) {
     res.status(500).send(error.message);
   }
-};
-
+})
 
 export {
   registerUser,
