@@ -285,6 +285,62 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
   }
 })
 
+// wishlist controllers
+
+const addToWishlist = asyncHandler(async (req, res) => {
+  const { productId } = req.body;
+
+  try {
+    const user = await User.findById(req.user?._id);
+    if (user.wishlist.includes(productId)) {
+      return res.status(400).send('Product already in wishlist');
+    }
+    user.wishlist.push(productId);
+    await user.save();
+    res.send('Product added to wishlist');
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+})
+
+// remove wishlist 
+const removeWishlist = asyncHandler(async (req, res) => {
+  const { productId } = req.params || req.body;
+  try {
+    const user = await User.findById(req.user?._id)
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    // Check if the product exists in the user's wishlist
+    const productIndex = user.wishList.indexOf(productId)
+
+    if (productIndex === -1) {
+      return res.status(400).json({ success: false, message: 'Product not in the wishlist' });
+    }
+
+    user.wishList.splice(productIndex, 1);
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Product removed from wishlist successfully',
+      wishlist: user.wishList, // Return updated wishlist
+  });
+  } catch (error) {
+
+  }
+})
+
+// get wishlist
+const getWishlist = async (req, res) => {
+  try {
+    const user = await User.findById(req.user?._id).populate('wishlist');
+    res.json(user.wishlist);
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+};
 
 
 export {
@@ -296,5 +352,8 @@ export {
   getCurrentUser,
   getUsers,
   changeUserRole,
-  deleteUser
+  deleteUser,
+  addToWishlist,
+  removeWishlist,
+  getWishlist
 }
