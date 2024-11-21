@@ -187,11 +187,54 @@ const getProductsBySeller = asyncHandler(async (req, res) => {
   }
 })
 
+const updateProductBySeller = asyncHandler(async (req, res) => {
+  const { productId } = req.params;
+  const sellerId = req.user?._id;
+  const updateData = req.body;
+
+  if (!productId) {
+    throw new ApiError(404, "productId is required")
+  }
+  try {
+    const product = await Product.findOne({
+      _id: productId,
+      seller: sellerId
+    })
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: 'Product not found or you do not have permission to update it',
+      });
+    }
+
+    Object.keys(updateData).forEach((key) => {
+      product[key] = updateData[key]
+    })
+
+    await product.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Product updated successfully',
+      product,
+    });
+  } catch (error) {
+    console.error('Error updating product:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+    })
+  }
+})
+
 
 
 export {
   addproduct,
   getProductById,
   getAllProduts,
-  getProductsBySeller
+  getProductsBySeller,
+  deleteProductBySeller,
+  updateProductBySeller
 }
