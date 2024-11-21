@@ -6,7 +6,9 @@ import { asyncHandler } from "../utlis/asyncHandler.js"
 import { uploadOnCloudinary } from "../utlis/cloudinary.js";
 import { isValidObjectId } from "mongoose";
 
+// seller controller
 
+// add product controller
 const addproduct = asyncHandler(async (req, res) => {
   const { name, description, price, category, brand } = req.body;
 
@@ -58,6 +60,7 @@ const addproduct = asyncHandler(async (req, res) => {
   }
 })
 
+// delete product controller
 const deleteProductBySeller = asyncHandler(async (req, res) => {
   const { productId } = req.params || req.body;
 
@@ -96,6 +99,74 @@ const deleteProductBySeller = asyncHandler(async (req, res) => {
   }
 })
 
+// get product by seller
+const getProductsBySeller = asyncHandler(async (req, res) => {
+  const { sellerId } = req.params;
+
+  if (!isValidObjectId(sellerId)) {
+    throw new ApiError(404, "invalid seller id")
+  }
+
+  try {
+    const products = await Product.find({ seller: sellerId }).populate("seller", "name email image")
+
+    if (!(products.length < 0)) {
+      return res.status(404).json({ message: 'No products found for this seller' });
+    }
+
+    res.status(200).json(
+      new ApiResponse(200, products, "no products found for this seller")
+    )
+  } catch (error) {
+    console.error('Error fetching products by seller:', error.message);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+})
+
+// update product by seller
+const updateProductBySeller = asyncHandler(async (req, res) => {
+  const { productId } = req.params;
+  const sellerId = req.user?._id;
+  const updateData = req.body;
+
+  if (!productId) {
+    throw new ApiError(404, "productId is required")
+  }
+  try {
+    const product = await Product.findOne({
+      _id: productId,
+      seller: sellerId
+    })
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: 'Product not found or you do not have permission to update it',
+      });
+    }
+
+    Object.keys(updateData).forEach((key) => {
+      product[key] = updateData[key]
+    })
+
+    await product.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Product updated successfully',
+      product,
+    });
+  } catch (error) {
+    console.error('Error updating product:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error',
+    })
+  }
+})
+
+
+// controllers for all users
 const getProductById = asyncHandler(async (req, res) => {
   try {
     const product = await Product.findById(req.params.id)
@@ -163,71 +234,6 @@ const getAllProduts = asyncHandler(async (req, res) => {
     res.status(500).json({ message: 'error while fetching all products', error });
   }
 })
-
-const getProductsBySeller = asyncHandler(async (req, res) => {
-  const { sellerId } = req.params;
-
-  if (!isValidObjectId(sellerId)) {
-    throw new ApiError(404, "invalid seller id")
-  }
-
-  try {
-    const products = await Product.find({ seller: sellerId }).populate("seller", "name email image")
-
-    if (!(products.length < 0)) {
-      return res.status(404).json({ message: 'No products found for this seller' });
-    }
-
-    res.status(200).json(
-      new ApiResponse(200, products, "no products found for this seller")
-    )
-  } catch (error) {
-    console.error('Error fetching products by seller:', error.message);
-    res.status(500).json({ message: 'Internal server error' });
-  }
-})
-
-const updateProductBySeller = asyncHandler(async (req, res) => {
-  const { productId } = req.params;
-  const sellerId = req.user?._id;
-  const updateData = req.body;
-
-  if (!productId) {
-    throw new ApiError(404, "productId is required")
-  }
-  try {
-    const product = await Product.findOne({
-      _id: productId,
-      seller: sellerId
-    })
-
-    if (!product) {
-      return res.status(404).json({
-        success: false,
-        message: 'Product not found or you do not have permission to update it',
-      });
-    }
-
-    Object.keys(updateData).forEach((key) => {
-      product[key] = updateData[key]
-    })
-
-    await product.save();
-
-    res.status(200).json({
-      success: true,
-      message: 'Product updated successfully',
-      product,
-    });
-  } catch (error) {
-    console.error('Error updating product:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error',
-    })
-  }
-})
-
 
 
 export {

@@ -3,7 +3,6 @@ import { ApiError } from "../utils/ApiError.js"
 import { User } from "../models/user.model.js"
 import { ApiResponse } from "../utlis/ApiResponse.js"
 import { asyncHandler } from "../utlis/asyncHandler.js"
-import { uploadOnCloudinary } from "../utlis/cloudinary.js";
 import { isValidObjectId } from "mongoose";
 import { Cart } from "../models/cart.model.js";
 
@@ -31,11 +30,7 @@ const addToCart = asyncHandler(async (req, res) => {
     throw new ApiError(400, "invalid productID")
   }
 
-
-
   try {
-
-
     const product = await Product.findById(porductId);
     if (!product) {
       return res.status(404).json({ success: false, message: 'Product not found' });
