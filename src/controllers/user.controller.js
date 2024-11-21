@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken"
 import mongoose, { isValidObjectId } from "mongoose"
-import { ApiError } from "../utils/ApiError.js"
+import { ApiError } from "../utlis/ApiError.js"
 import { User } from "../models/user.model.js"
 import { ApiResponse } from "../utlis/ApiResponse.js"
 import { asyncHandler } from "../utlis/asyncHandler.js"

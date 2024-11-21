@@ -13,16 +13,16 @@ import {
 
 const router = Router()
 
-router.route(upload.fields([
+router.route('/add-product').post(upload.fields([
   {
     name: "image",
     maxCount: 1
   }
-]),'/add-product').post(verifyJwt,checkRole('seller'),addproduct)
-router.route('/all-product').get(verifyJwt,getAllProduts)
-router.route('/delete-product').delete(verifyJwt,checkRole('seller'),deleteProductBySeller)
-router.route('/product/:id').get(verifyJwt,getProductById)
-router.route('/product-seller/:sellerId').get(verifyJwt,checkRole('seller'),getProductsBySeller)
-router.route('/update-product/:productId').patch(verifyJwt,checkRole('seller'),updateProductBySeller)
+]), verifyJwt, checkRole('seller'), addproduct)
+router.route('/all-product').get(verifyJwt, getAllProduts)
+router.route('/delete-product').delete(verifyJwt, checkRole('seller'), deleteProductBySeller)
+router.route('/product/:id').get(verifyJwt, getProductById)
+router.route('/product-seller/:sellerId').get(verifyJwt, checkRole('seller'), getProductsBySeller)
+router.route('/update-product/:productId').patch(verifyJwt, checkRole('seller'), updateProductBySeller)
 
 export default router
